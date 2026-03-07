@@ -242,23 +242,29 @@ def verify_college():
 def upload_resume():
 
     if "resume" not in request.files:
-        return jsonify({"error":"No file uploaded"}),400
+        return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["resume"]
 
-   filepath = os.path.join(app.config["UPLOAD_FOLDER"], secure_filename(file.filename))
+    filename = secure_filename(file.filename)
+
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+
     file.save(filepath)
 
-    text=""
+    text = ""
 
     reader = PdfReader(filepath)
 
     for page in reader.pages:
-        text += page.extract_text()
+        content = page.extract_text()
+        if content:
+            text += content
 
     return jsonify({
-        "message":"Resume uploaded successfully",
-        "resume_text":text[:1000]
+        "message": "Resume uploaded successfully",
+        "resume_text": text[:1000],
+        "file_path": filepath
     })
 
 # ---------------- EXTRACT RESUME TEXT ----------------
