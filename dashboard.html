@@ -103,10 +103,10 @@ padding:10px;
 border:none;
 border-radius:6px;
 margin-top:10px;
+cursor:pointer;
 }
 
 </style>
-
 </head>
 
 <body>
@@ -123,11 +123,8 @@ window.location="login.html"
 
 
 <div class="header">
-
 <h2>InnovateX AI Assistant</h2>
-
 <button class="logout" onclick="logout()">Logout</button>
-
 </div>
 
 
@@ -135,20 +132,14 @@ window.location="login.html"
 
 
 <div class="buttons">
-
 <button onclick="sayHi()">Hi</button>
-
 <button onclick="internship()">I want internship</button>
-
 </div>
 
 
 <div class="input-area">
-
 <input id="msg" placeholder="Type message">
-
 <button onclick="send()">Send</button>
-
 </div>
 
 
@@ -158,7 +149,7 @@ window.location="login.html"
 
 setTimeout(()=>{
 
-bot("Hi  I am your InnovateX Internship AI Assistant. I can help analyze your resume, suggest internships and guide your career path.")
+bot("Hi 👋 I am your InnovateX Internship AI Assistant. I can analyze your resume, suggest internships and guide your career path.")
 
 },800)
 
@@ -212,8 +203,6 @@ user(msg)
 
 document.getElementById("msg").value=""
 
-/* typing animation */
-
 bot("AI is typing...")
 
 try{
@@ -226,19 +215,17 @@ headers:{
 "Content-Type":"application/json"
 },
 body:JSON.stringify({
-message:msg
+question:msg
 })
 }
 )
 
 let data = await response.json()
 
-/* remove typing message */
-
 let chat=document.getElementById("chat")
 chat.lastChild.remove()
 
-bot(data.response || data.reply)
+bot(data.reply || data.answer)
 
 }catch(error){
 
@@ -290,6 +277,8 @@ btn.innerText="Upload Resume"
 
 btn.className="upload"
 
+btn.onclick=uploadResume
+
 document.getElementById("chat").appendChild(btn)
 
 },600)
@@ -298,7 +287,54 @@ document.getElementById("chat").appendChild(btn)
 
 
 
-/* AI CALL FOR QUICK BUTTON */
+/* UPLOAD RESUME */
+
+async function uploadResume(){
+
+let input=document.createElement("input")
+input.type="file"
+input.accept=".pdf"
+
+input.onchange=async function(){
+
+let file=input.files[0]
+
+let formData=new FormData()
+
+formData.append("resume",file)
+
+bot("Uploading resume...")
+
+try{
+
+let response = await fetch(
+"https://innovatex-backend-production.up.railway.app/upload-resume",
+{
+method:"POST",
+body:formData
+})
+
+let data=await response.json()
+
+bot("Resume uploaded successfully ✅")
+
+bot("Resume preview: "+data.resume_text)
+
+}catch(err){
+
+bot("⚠️ Resume upload failed")
+
+}
+
+}
+
+input.click()
+
+}
+
+
+
+/* QUICK AI CALL */
 
 async function sendAI(message){
 
@@ -312,7 +348,7 @@ headers:{
 "Content-Type":"application/json"
 },
 body:JSON.stringify({
-message:message
+question:message
 })
 }
 )
@@ -322,7 +358,7 @@ let data = await response.json()
 let chat=document.getElementById("chat")
 chat.lastChild.remove()
 
-bot(data.response || data.reply)
+bot(data.reply || data.answer)
 
 }
 

@@ -189,7 +189,7 @@ def ai_chat():
         print(e)
 
         return jsonify({"answer":"AI service error"})
-        
+
 # ---------------- SAVE USER ----------------
 @app.route("/save-user", methods=["POST"])
 def save_user():
@@ -244,13 +244,21 @@ def upload_resume():
         return jsonify({"error":"No file uploaded"}),400
 
     file = request.files["resume"]
-    filename = secure_filename(file.filename)
 
-    path = os.path.join(app.config["UPLOAD_FOLDER"],filename)
-    file.save(path)
+    filepath = os.path.join("uploads", file.filename)
+    file.save(filepath)
 
-    return jsonify({"file_path":path})
+    text=""
 
+    reader = PdfReader(filepath)
+
+    for page in reader.pages:
+        text += page.extract_text()
+
+    return jsonify({
+        "message":"Resume uploaded successfully",
+        "resume_text":text[:1000]
+    })
 
 # ---------------- EXTRACT RESUME TEXT ----------------
 @app.route("/extract-resume-text", methods=["POST"])
