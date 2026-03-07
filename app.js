@@ -6,9 +6,7 @@ const API="https://innovatex-backend-production.up.railway.app"
 /* AUTO GREETING */
 
 setTimeout(()=>{
-
 bot("Hi 👋 I am your InnovateX Internship AI Assistant. Ask me anything about internships.")
-
 },800)
 
 
@@ -92,7 +90,15 @@ let data=await response.json()
 let typingEl=document.getElementById("typing")
 if(typingEl) typingEl.remove()
 
-bot(data.answer || data.reply || "AI response unavailable")
+if(data.reply){
+bot(data.reply)
+}
+else if(data.answer){
+bot(data.answer)
+}
+else{
+bot("AI response unavailable")
+}
 
 }catch(error){
 
@@ -192,7 +198,7 @@ let data=await res.json()
 
 bot("Resume uploaded successfully ✅")
 
-extractResumeText(data.file_path)
+detectSkills(data.resume_text || "")
 
 }catch(e){
 
@@ -208,61 +214,32 @@ input.click()
 
 
 
-/* EXTRACT RESUME TEXT */
-
-async function extractResumeText(path){
-
-bot("Analyzing resume...")
-
-let res=await fetch(API+"/extract-resume-text",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-file_path:path
-})
-
-})
-
-let data=await res.json()
-
-detectSkills(data.resume_text)
-
-}
-
-
-
 /* SKILL DETECTION */
 
-async function detectSkills(text){
+function detectSkills(text){
 
-bot("Detecting skills...")
+let skills=[]
 
-let res=await fetch(API+"/extract-skills",{
+let t=text.toLowerCase()
 
-method:"POST",
+if(t.includes("python")) skills.push("Python")
+if(t.includes("java")) skills.push("Java")
+if(t.includes("machine learning")) skills.push("Machine Learning")
+if(t.includes("sql")) skills.push("SQL")
+if(t.includes("html")) skills.push("HTML")
+if(t.includes("css")) skills.push("CSS")
 
-headers:{
-"Content-Type":"application/json"
-},
+if(skills.length===0){
 
-body:JSON.stringify({
-resume_text:text
-})
+bot("No major skills detected")
 
-})
-
-let data=await res.json()
-
-let skills=data.skills
+}else{
 
 bot("Detected Skills: "+skills.join(", "))
 
 recommendInternships(skills)
+
+}
 
 }
 
@@ -274,31 +251,32 @@ async function recommendInternships(skills){
 
 bot("Finding internships based on your skills...")
 
-let res=await fetch(API+"/recommend-internships",{
+try{
 
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-skills:skills
-})
-
-})
+let res=await fetch(API+"/live-internships")
 
 let data=await res.json()
+
+if(!data || data.length===0){
+bot("No internships found")
+return
+}
 
 data.slice(0,3).forEach(job=>{
 
 bot(
 "Company: "+job.company+
-"\nRole: "+job.role+
-"\nMatch: "+job.match_percentage+"%"
+"\nRole: "+job.title+
+"\nLocation: "+job.location
 )
 
 })
+
+}catch(e){
+
+bot("⚠️ Internship API error")
+
+}
 
 }
 
@@ -310,30 +288,21 @@ async function startInterview(){
 
 bot("Starting interview preparation...")
 
-let res=await fetch(API+"/interview-sim",{
+try{
 
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify({
-role:"ai intern",
-skills:["python"]
-})
-
-})
+let res=await fetch(API+"/mcq")
 
 let data=await res.json()
 
-bot("Sample Interview Questions:")
+bot("Sample Interview Question:")
 
-data.questions.forEach(q=>{
+bot(data.question)
 
-bot("• "+q)
+}catch(e){
 
-})
+bot("⚠️ Interview API error")
+
+}
 
 }
 
@@ -353,18 +322,16 @@ typing.id="typing"
 
 document.getElementById("chat").appendChild(typing)
 
+try{
+
 let response=await fetch(API+"/ai-chat",{
-
 method:"POST",
-
 headers:{
 "Content-Type":"application/json"
 },
-
 body:JSON.stringify({
 question:message
 })
-
 })
 
 let data=await response.json()
@@ -372,7 +339,16 @@ let data=await response.json()
 let typingEl=document.getElementById("typing")
 if(typingEl) typingEl.remove()
 
-bot(data.answer || data.reply)
+bot(data.reply || data.answer || "AI response unavailable")
+
+}catch(e){
+
+let typingEl=document.getElementById("typing")
+if(typingEl) typingEl.remove()
+
+bot("⚠️ AI server error")
+
+}
 
 }
 
