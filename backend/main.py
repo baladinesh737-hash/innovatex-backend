@@ -8,8 +8,9 @@ from PyPDF2 import PdfReader
 from groq import Groq
 import os
 
-groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+app = Flask(__name__)   
 
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 # ---------------- HOME ----------------
 @app.route("/")
 def home():
@@ -245,7 +246,7 @@ def upload_resume():
 
     file = request.files["resume"]
 
-    filepath = os.path.join("uploads", file.filename)
+   filepath = os.path.join(app.config["UPLOAD_FOLDER"], secure_filename(file.filename))
     file.save(filepath)
 
     text=""
