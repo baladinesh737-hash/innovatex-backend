@@ -165,33 +165,32 @@ def health_check():
 
 
 # ---------------- AI CHAT ----------------
-@app.route("/ai-chat", methods=["POST"])
-def ai_chat():
-
-    data = request.get_json()
-    question = data.get("question")
-
+@app.route("/predict-career", methods=["POST"])
+def predict_career():
     try:
+        data = request.get_json()
+        skills = data.get("skills", [])
+
         completion = groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="llama-3.3-70b-versatile",
             messages=[
                 {
                     "role": "system",
-                    "content": "You are InnovateX AI assistant helping students with internships."
+                    "content": "You are a career advisor AI."
                 },
                 {
                     "role": "user",
-                    "content": question
+                    "content": f"Based on these skills {skills}, suggest best tech career path."
                 }
             ]
         )
 
-        answer = completion.choices[0].message.content
-        return jsonify({"answer": answer})
+        reply = completion.choices[0].message.content
+
+        return jsonify({"career_prediction": reply})
 
     except Exception as e:
-        print("AI ERROR:", e)
-        return jsonify({"answer": "AI service error"})
+        return jsonify({"error": str(e)})
 
 # ---------------- SAVE USER ----------------
 @app.route("/save-user", methods=["POST"])
