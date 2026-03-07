@@ -113,44 +113,45 @@ cursor:pointer;
 
 <script>
 
-/* LOGIN PROTECTION */
-
 if(!localStorage.getItem("loggedUser")){
 window.location="login.html"
 }
 
 </script>
 
-
 <div class="header">
 <h2>InnovateX AI Assistant</h2>
 <button class="logout" onclick="logout()">Logout</button>
 </div>
 
-
 <div class="chat-container" id="chat"></div>
 
-
 <div class="buttons">
-<button onclick="sayHi()">Hi</button>
-<button onclick="internship()">I want internship</button>
-</div>
 
+<button onclick="sayHi()">Hi</button>
+
+<button onclick="internship()">I want internship</button>
+
+<button onclick="findInternships()">Find Internships</button>
+
+<button onclick="startInterview()">Start Interview</button>
+
+</div>
 
 <div class="input-area">
-<input id="msg" placeholder="Type message">
-<button onclick="send()">Send</button>
-</div>
 
+<input id="msg" placeholder="Type message">
+
+<button onclick="send()">Send</button>
+
+</div>
 
 <script>
 
 /* AUTO GREETING */
 
 setTimeout(()=>{
-
-bot("Hi 👋 I am your InnovateX Internship AI Assistant. I can analyze your resume, suggest internships and guide your career path.")
-
+bot("Hi 👋 I am InnovateX AI Assistant. Upload your resume and I will analyze your skills and recommend internships.")
 },800)
 
 
@@ -207,7 +208,7 @@ bot("AI is typing...")
 
 try{
 
-let response = await fetch(
+let response=await fetch(
 "https://innovatex-backend-production.up.railway.app/ai-chat",
 {
 method:"POST",
@@ -220,7 +221,7 @@ question:msg
 }
 )
 
-let data = await response.json()
+let data=await response.json()
 
 let chat=document.getElementById("chat")
 chat.lastChild.remove()
@@ -229,7 +230,7 @@ bot(data.reply || data.answer)
 
 }catch(error){
 
-bot("⚠️ AI server error. Please try again.")
+bot("⚠️ AI server error")
 
 }
 
@@ -237,7 +238,7 @@ bot("⚠️ AI server error. Please try again.")
 
 
 
-/* ENTER KEY SEND */
+/* ENTER KEY */
 
 document.getElementById("msg").addEventListener("keypress",function(e){
 
@@ -249,15 +250,11 @@ send()
 
 
 
-/* QUICK BUTTONS */
-
 function sayHi(){
 
 user("Hi")
 
-setTimeout(()=>{
 sendAI("Hi")
-},500)
 
 }
 
@@ -269,7 +266,7 @@ user("I want internship")
 
 setTimeout(()=>{
 
-bot("Please upload your resume so I can analyze your skills and suggest internships.")
+bot("Please upload your resume so I can analyze your skills.")
 
 let btn=document.createElement("button")
 
@@ -307,7 +304,7 @@ bot("Uploading resume...")
 
 try{
 
-let response = await fetch(
+let response=await fetch(
 "https://innovatex-backend-production.up.railway.app/upload-resume",
 {
 method:"POST",
@@ -318,9 +315,9 @@ let data=await response.json()
 
 bot("Resume uploaded successfully ✅")
 
-bot("Resume preview: "+data.resume_text)
+detectSkills(data.resume_text)
 
-}catch(err){
+}catch(e){
 
 bot("⚠️ Resume upload failed")
 
@@ -334,13 +331,140 @@ input.click()
 
 
 
-/* QUICK AI CALL */
+/* SKILL DETECTION */
+
+function detectSkills(text){
+
+let skills=[]
+
+let t=text.toLowerCase()
+
+if(t.includes("python")) skills.push("Python")
+if(t.includes("java")) skills.push("Java")
+if(t.includes("machine learning")) skills.push("Machine Learning")
+if(t.includes("sql")) skills.push("SQL")
+if(t.includes("html")) skills.push("HTML")
+if(t.includes("css")) skills.push("CSS")
+
+if(skills.length===0){
+
+bot("No major skills detected")
+
+}else{
+
+bot("Detected Skills: "+skills.join(", "))
+
+}
+
+}
+
+
+
+/* INTERNSHIP FINDER */
+
+async function findInternships(){
+
+bot("Searching internships...")
+
+try{
+
+let response=await fetch(
+"https://innovatex-backend-production.up.railway.app/live-internships"
+)
+
+let data=await response.json()
+
+if(data.length===0){
+
+bot("No internships found")
+
+return
+
+}
+
+bot("Top internships for you:")
+
+data.slice(0,5).forEach(job=>{
+
+bot(
+"Company: "+job.company+
+"\nRole: "+job.role+
+"\nLocation: "+job.location
+)
+
+})
+
+}catch(e){
+
+bot("⚠️ Internship API error")
+
+}
+
+}
+
+
+
+/* INTERVIEW */
+
+async function startInterview(){
+
+bot("Starting interview practice...")
+
+try{
+
+let response=await fetch(
+"https://innovatex-backend-production.up.railway.app/mcq"
+)
+
+let data=await response.json()
+
+let q=data.question
+
+bot("Question: "+q.question)
+
+q.options.forEach(opt=>{
+
+let btn=document.createElement("button")
+
+btn.className="upload"
+
+btn.innerText=opt
+
+btn.onclick=function(){
+
+if(opt===q.answer){
+
+bot("✅ Correct!")
+
+}else{
+
+bot("❌ Wrong. Correct answer: "+q.answer)
+
+}
+
+}
+
+document.getElementById("chat").appendChild(btn)
+
+})
+
+}catch(e){
+
+bot("⚠️ Interview API error")
+
+}
+
+}
+
+
+
+/* QUICK AI */
 
 async function sendAI(message){
 
 bot("AI is typing...")
 
-let response = await fetch(
+let response=await fetch(
 "https://innovatex-backend-production.up.railway.app/ai-chat",
 {
 method:"POST",
@@ -353,7 +477,7 @@ question:message
 }
 )
 
-let data = await response.json()
+let data=await response.json()
 
 let chat=document.getElementById("chat")
 chat.lastChild.remove()
