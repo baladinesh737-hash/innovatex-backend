@@ -175,14 +175,8 @@ def ai_chat():
         completion = groq_client.chat.completions.create(
             model="llama3-8b-8192",
             messages=[
-                {
-                    "role":"system",
-                    "content":"You are InnovateX AI assistant helping students with internships and career guidance."
-                },
-                {
-                    "role":"user",
-                    "content":question
-                }
+                {"role":"system","content":"You are InnovateX AI assistant helping students with internships."},
+                {"role":"user","content":question}
             ]
         )
 
@@ -194,9 +188,7 @@ def ai_chat():
 
         print(e)
 
-        return jsonify({
-            "answer":"Sorry, AI service temporarily unavailable."
-        })
+        return jsonify({"answer":"AI service error"})
         
 # ---------------- SAVE USER ----------------
 @app.route("/save-user", methods=["POST"])
